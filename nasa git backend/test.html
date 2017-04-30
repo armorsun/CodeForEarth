@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <!-- <link rel='stylesheet' href='/stylesheets/style.css' /> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+  </head>
+  <body>
+   <h1>socket intel</h1>
+    <script>
+    var socket = io.connect('http://ec2-54-204-81-60.compute-1.amazonaws.com:3579/'); // 連線至伺服器
+
+  //  socket.on('news', function (data) {
+  //   console.log(data);
+  //   socket.emit('event', { my: 'data' });
+  // });
+//   socket.emit('intelToSocket', {
+// "seq": 1,
+// "pos1": -0.93,
+// "pos2": -4.57055,
+// "pos3": 0.64278,
+// "ori1": 0.98953,
+// "ori2": -0.13628,
+// "ori3": -0.04750,
+// "ori4": 1.37925,
+// });
+
+  console.log('ok')
+
+
+  var tt = 10;
+
+function timego(){
+	  socket.emit('intelToSocket', [{
+	"seq": 1,
+	"pos1": -0.93,
+	"pos2": -4.57055,
+	"pos3": 0.64278,
+	"ori1": 0.98953,
+	"ori2": -0.13628,
+	"ori3": -0.04750,
+	"ori4": 1.37925,
+	}]);
+
+};
+
+var timer = window.setInterval("timego()",3000);
+
+</script>
+  </body>
+</html>
