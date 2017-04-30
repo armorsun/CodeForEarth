@@ -45,7 +45,7 @@
   <div>{{ ori_str }}</div>
 
   <p class="case">
-    <X3D id="x3dElement" xmlns="http://www.web3d.org/specifications/x3d-namespace" showStat="false" showLog="false" x="0px" y="0px" width="800px" height="600px">
+    <X3D id="x3dElement" xmlns="http://www.web3d.org/specifications/x3d-namespace" showStat="false" showLog="false" x="0px" y="0px" width="1000px" height="750px">
       <Scene>
         <background DEF='bgnd' transparency='0' skyColor='1.0 1.0 1.0' ></background>
         <Transform id="theSun" translation="0 0 0">
@@ -68,11 +68,11 @@
 
   var data = {
     seq: 0,
-    // pos_X: 6, pos_Y: 5.5, pos_Z: 6.5, ori_X: 1, ori_Y: -1, ori_Z: 0, ori4: -0.785, fieldOfView: 0.785398,
+    // pos_X: 6, pos_Y: 5.5, pos_Z: 6.5, ori_X: 1, ori_Y: -1, ori_Z: 0, ori4: -0.785,
     fieldOfView: 0.785398,
     pos_X: 0,
     pos_Y: 0,
-    pos_Z: 100,
+    pos_Z: 20,
     ori_X: 0,
     ori_Y: 0,
     ori_Z: 0,
@@ -84,43 +84,48 @@
     data: data,
     created: function() {
       console.log("created");
-      // var socket = io.connect('http://ec2-54-204-81-60.compute-1.amazonaws.com:3579/');
-      var socket = io.connect('localhost:3579');
+      var socket = io.connect('http://ec2-54-204-81-60.compute-1.amazonaws.com:3579/');
+      // var socket = io.connect('localhost:3579');
       console.log("socket: ", socket);
 
       socket.on('socketToWeb', function (data) {
         console.log(socket.id, data);
-        pos_X = data[0]
-        pos_Y = data[1]
-        pos_Z = data[2]
-        ori_X = data[3]
-        ori_Y = data[4]
-        ori_Z = data[5]
-        ori_deg = data[6]
 
-        vue1.ori_X = pos_X
-        vue1.ori_Y = pos_Y
-        vue1.ori_Z = pos_Z
-        vue1.ori4 += ori_deg
 
          // (1,0,0,deg)
-        if (ori_X == 1 && ori_Y == 0){
+        if (data[3] == 1 && data[4] == 0){
           console.log("垂直方向");
-          vue1.pos_Y = vue1.pos_Y * Math.cos(ori_deg) + vue1.pos_Z * Math.sin(ori_deg)
-          console.log('aa: ',-vue1.pos_Y);
-          console.log('a: ',-vue1.pos_Y * Math.sin(ori_deg));
-          console.log('b: ',vue1.pos_Z * Math.cos(ori_deg));
-          vue1.pos_Z = -vue1.pos_Y * Math.sin(ori_deg) + vue1.pos_Z * Math.cos(ori_deg)
+
+          pos_X = data[0]
+          pos_Y = data[1]
+          pos_Z = data[2]
+          ori_X = data[3]
+          ori_Y = data[4]
+          ori_Z = data[5]
+          ori_deg = data[6] * 0.5
+
+          vue1.ori_X = ori_X
+          vue1.ori_Y = ori_Y
+          vue1.ori_Z = ori_Z
+          vue1.ori4 -= ori_deg
+
+          old_pos_Y = vue1.pos_Y
+          old_pos_Z = vue1.pos_Z
+          vue1.pos_Y = (old_pos_Y* Math.cos(ori_deg) + old_pos_Z * Math.sin(ori_deg))
+          vue1.pos_Z = (-old_pos_Y * Math.sin(ori_deg) + old_pos_Z * Math.cos(ori_deg))
+          console.log('pos_Y: ',vue1.pos_Y);
+          console.log('pos_Z: ',vue1.pos_Z);
 
         // (0,1,0,deg)
-      }else if(ori_X == 0 && ori_Y ==1){
-          deltaX = (vue1.pos_Z) * Math.sin(ori_deg)
-          vue1.pos_X += deltaX
-          deltaZ = (vue1.pos_Z) * Math.cos(ori_deg)
-          vue1.pos_Z = deltaZ
+      // }else if(ori_X == 0 && ori_Y ==1){
+      //     deltaX = (vue1.pos_Z) * Math.sin(ori_deg)
+      //     vue1.pos_X += deltaX
+      //     deltaZ = (vue1.pos_Z) * Math.cos(ori_deg)
+      //     vue1.pos_Z = deltaZ
         }else {
           console.log("Orientation僅支援(1,0,0,角度)或(0,1,0,角度)");
         }
+
       });
     },
     computed: {
@@ -664,7 +669,7 @@ function drawLocalAxis(body, m) {
 /*-------------------------*
 *    Main Function        *
 *-------------------------*/
-drawLocalAxis("theSun", 2000.0)
+drawLocalAxis("theSun", 20.0)
 // addNode("Venus", 1,2,3,0.2)
 
 function startUpdate()
