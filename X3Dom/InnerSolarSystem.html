@@ -11,7 +11,7 @@
   p.case { clear: both; border-top: 0px; solid: #fff; }
   #modelDate { color: rgb(100,10,100); text-indent: 50px; font-style: italic; font-family:verdana; font-size:160%; }
   </style>
-  <link rel="stylesheet" type="text/css" href="x3dom.css" />
+  <link rel="stylesheet" type="text/css" href="./asset/x3dom.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.0/vue.min.js" integrity="sha256-eeNzKAMn2OkBNCzHUpbHabCRw8RackV+XHyoFTzuYaQ=" crossorigin="anonymous"></script>
 
   <!-- 從 EC2 的 socket 接資料 -->
@@ -32,18 +32,20 @@
   </p>
 
   <span id="vue1">
-  <span>pos1: <input v-model="pos1" type="text"></span>
-  <span>pos2: <input v-model="pos2" type="text"></span>
-  <span>pos3: <input v-model="pos3" type="text"></span>
+  <span>fieldOfView: <input v-model="fieldOfView" type="text"></span>
+  <div>{{ fieldOfView }}</div>
+  <span>pos-x: <input v-model="pos_X" type="text"></span>
+  <span>pos-y: <input v-model="pos_Y" type="text"></span>
+  <span>pos-z: <input v-model="pos_Z" type="text"></span>
   <div>{{ pos_str }}</div>
-  <span>ori: <input v-model="ori1" type="text"></span>
-  <span>ori: <input v-model="ori2" type="text"></span>
-  <span>ori: <input v-model="ori3" type="text"></span>
-  <span>ori: <input v-model="ori4" type="text"></span>
+  <span>ori-x: <input v-model="ori_X" type="text"></span>
+  <span>ori-y: <input v-model="ori_Y" type="text"></span>
+  <span>ori-z: <input v-model="ori_Z" type="text"></span>
+  <span>ori-delta: <input v-model="ori4" type="text"></span>
   <div>{{ ori_str }}</div>
 
   <p class="case">
-    <X3D xmlns="http://www.web3d.org/specifications/x3d-namespace" showStat="false" showLog="false" x="0px" y="0px" width="800px" height="600px">
+    <X3D id="x3dElement" xmlns="http://www.web3d.org/specifications/x3d-namespace" showStat="false" showLog="false" x="0px" y="0px" width="800px" height="600px">
       <Scene>
         <background DEF='bgnd' transparency='0' skyColor='1.0 1.0 1.0' ></background>
         <Transform id="theSun" translation="0 0 0">
@@ -54,7 +56,7 @@
             <Sphere radius='0.7'/>
           </Shape>
         </Transform>
-        <Viewpoint fieldOfView="0.785398" v-bind:position="pos_str" v-bind:orientation="ori_str"  description=""/>
+        <Viewpoint :fieldOfView="fieldOfView" v-bind:position="pos_str" v-bind:orientation="ori_str"  description=""/>
       </Scene>
     </X3D>
   </p>
@@ -63,17 +65,18 @@
 
   <!-- 動態修改 defaultView 的 Orientation -->
   <script type="text/javascript">
-  var reveivedObj = {}
 
   var data = {
     seq: 0,
-    pos1: 6,
-    pos2: 5.5,
-    pos3: 6.5,
-    ori1: 1,
-    ori2: -1,
-    ori3: 0,
-    ori4: -0.785,
+    // pos_X: 6, pos_Y: 5.5, pos_Z: 6.5, ori_X: 1, ori_Y: -1, ori_Z: 0, ori4: -0.785, fieldOfView: 0.785398,
+    fieldOfView: 0.785398,
+    pos_X: 0,
+    pos_Y: 0,
+    pos_Z: 100,
+    ori_X: 0,
+    ori_Y: 0,
+    ori_Z: 0,
+    ori4: 0,
   }
 
   var vue1 = new Vue({
@@ -81,35 +84,57 @@
     data: data,
     created: function() {
       console.log("created");
-      // var socket = io.connect('http://ec2-54-204-81-60.compute-1.amazonaws.com:3579/'); // 連線至伺服器
-      var socket = io.connect('localhost:3579'); // 連線至伺服器
+      // var socket = io.connect('http://ec2-54-204-81-60.compute-1.amazonaws.com:3579/');
+      var socket = io.connect('localhost:3579');
+      console.log("socket: ", socket);
 
       socket.on('socketToWeb', function (data) {
-        console.log("From", socket.id, data);
-        console.log("Before(vue1.pos3): ", vue1.pos3);
-        vue1.seq  += data.seq
-        vue1.pos1 += data.pos1
-        vue1.pos2 += data.pos2
-        vue1.pos3 += data.pos3
-        vue1.ori1 += data.ori1
-        vue1.ori2 += data.ori2
-        vue1.ori3 += data.ori3
-        vue1.ori4 += data.ori4
-        console.log("After(vue1.pos3): ", vue1.pos3);
+        console.log(socket.id, data);
+        pos_X = data[0]
+        pos_Y = data[1]
+        pos_Z = data[2]
+        ori_X = data[3]
+        ori_Y = data[4]
+        ori_Z = data[5]
+        ori_deg = data[6]
+
+        vue1.ori_X = pos_X
+        vue1.ori_Y = pos_Y
+        vue1.ori_Z = pos_Z
+        vue1.ori4 += ori_deg
+
+         // (1,0,0,deg)
+        if (ori_X == 1 && ori_Y == 0){
+          console.log("垂直方向");
+          vue1.pos_Y = vue1.pos_Y * Math.cos(ori_deg) + vue1.pos_Z * Math.sin(ori_deg)
+          console.log('aa: ',);
+          console.log('a: ',-vue1.pos_Y * Math.sin(ori_deg));
+          console.log('b: ',vue1.pos_Z * Math.cos(ori_deg));
+          vue1.pos_Z = -vue1.pos_Y * Math.sin(ori_deg) + vue1.pos_Z * Math.cos(ori_deg)
+
+        // (0,1,0,deg)
+      }else if(ori_X == 0 && ori_Y ==1){
+          deltaX = (vue1.pos_Z) * Math.sin(ori_deg)
+          vue1.pos_X += deltaX
+          deltaZ = (vue1.pos_Z) * Math.cos(ori_deg)
+          vue1.pos_Z = deltaZ
+        }else {
+          console.log("Orientation僅支援(1,0,0,角度)或(0,1,0,角度)");
+        }
       });
     },
     computed: {
       pos_str: function () {
         return (
-          String(this.pos1) + " " + String(this.pos2) + " " + String(this.pos3)
+          String(this.pos_X) + " " + String(this.pos_Y) + " " + String(this.pos_Z)
         )
       },
       ori_str: function () {
         return (
-          String(this.ori1) + " " + String(this.ori2) + " " + String(this.ori3) + " " + String(this.ori4)
+          String(this.ori_X) + " " + String(this.ori_Y) + " " + String(this.ori_Z) + " " + String(this.ori4)
         )
       },
-    }
+    },
   })
   </script>
 
@@ -562,9 +587,86 @@ function showValue(newValue)
   simSpeed = newValue * 0.01;    // was 0.01
   //simSpeed = newValue
 }
+/*--------------------------------------------------------------------------------------------*
+*  Functions for adding and manipulating X3D object to the Document Object Model via X3Dom   *
+*--------------------------------------------------------------------------------------------*/
+function drawLocalAxis(body, m) {
+  // Purpose: Display orientation axes on the specified entity.
+  // Things to do: Refactor this code us usa function to draw an axis.
+  var xAxisCoords =  0 + " " + 0 + " " + 0 + " " + m + " " + 0 + " " + 0 ;
+  var xAxisIndices = 0 + " " + 1 ;
+
+  var yAxisCoords =  0 + " " + 0 + " " + 0 + " " + 0 + " " + m + " " + 0 ;
+  var yAxisIndices = 0 + " " + 1 ;
+
+  var zAxisCoords =  0 + " " + 0 + " " + 0 + " " + 0 + " " + 0 + " " + m ;
+  var zAxisIndices = 0 + " " + 1 ;
+
+  // --------- Draw Y Axis --------------
+  var s = document.createElement('Shape');            // Shape Node
+  s.setAttribute("id", 'localY');
+
+  var app = document.createElement('Appearance');     // Appearance Node
+  var mat = document.createElement('Material');       // Material Node
+  mat.setAttribute("emissiveColor", 1 + " " + 0 + " " + 0);
+  app.appendChild(mat);
+  s.appendChild(app);
+
+  var    yAxisline = document.createElement('IndexedLineSet');
+  yAxisline.setAttribute("coordIndex", yAxisIndices) ;
+  var ycoords = document.createElement('Coordinate');
+  ycoords.setAttribute("point", yAxisCoords);
+
+  yAxisline.appendChild(ycoords) ;
+  s.appendChild(yAxisline);
+
+  var ot = document.getElementById(body);
+  ot.appendChild(s);
+  // ------- Draw X Axis ----------------
+  var sx = document.createElement('Shape');            // Shape Node
+  sx.setAttribute("id", 'localX');
+  var app = document.createElement('Appearance');     // Appearance Node
+  var mat = document.createElement('Material');       // Material Node
+  mat.setAttribute("emissiveColor", 0 + " " + 1 + " " + 0);
+  app.appendChild(mat);
+  sx.appendChild(app);
+
+  var xAxisline = document.createElement('IndexedLineSet');
+  xAxisline.setAttribute("coordIndex", xAxisIndices) ;
+  var xcoords = document.createElement('Coordinate');
+  xcoords.setAttribute("point", xAxisCoords);
+  xAxisline.appendChild(xcoords) ;
+  sx.appendChild(xAxisline);
+
+  var ot = document.getElementById(body);
+  ot.appendChild(sx);
+
+  // ------- Draw Z Axis ----------------
+  var sz = document.createElement('Shape');            // Shape Node
+  sz.setAttribute("id", 'localZ');
+  var app = document.createElement('Appearance');     // Appearance Node
+  var mat = document.createElement('Material');       // Material Node
+  mat.setAttribute("emissiveColor", 0 + " " + 0 + " " + 1);
+  app.appendChild(mat);
+  sz.appendChild(app);
+
+  var zAxisline = document.createElement('IndexedLineSet');
+  zAxisline.setAttribute("coordIndex", zAxisIndices) ;
+  var zcoords = document.createElement('Coordinate');
+  zcoords.setAttribute("point", zAxisCoords);
+  zAxisline.appendChild(zcoords) ;
+  sz.appendChild(zAxisline);
+
+  var ot = document.getElementById(body);
+  ot.appendChild(sz);
+}
+
 /*-------------------------*
 *    Main Function        *
 *-------------------------*/
+drawLocalAxis("theSun", 2000.0)
+// addNode("Venus", 1,2,3,0.2)
+
 function startUpdate()
 {
   // var AUscaler = 3 ;                    // Astronautical Unit scaler.
@@ -670,7 +772,18 @@ function startUpdate()
     <li><A HREF="http://www.wiley.com/WileyCDA/WileyTitle/productCd-0471146366.html"><u>Orbital Mechanics: Theory and Applications</u></A></li>
   </ol>
 </p>
-<script type="text/javascript" src="x3dom.js"></script>
+<script type="text/javascript" src="./asset/x3dom.js"></script>
+
+
+<!-- <script type="text/javascript">
+//get the viewer's 3D local frame
+var x3dElem  = document.getElementById('x3dElement');
+var vMatInv  = x3dElem.runtime.viewMatrix().inverse();
+var viewDir  = vMatInv.multMatrixVec(new x3dom.fields.SFVec3f(0.0, 0.0, -1.0));
+var upVec    = vMatInv.multMatrixVec(new x3dom.fields.SFVec3f(0.0, 1.0,  0.0));
+var rightVec = viewDir.cross(upVec);
+console.log(viewDir, upVec, rightVec);
+</script> -->
 
 </body>
 </html>

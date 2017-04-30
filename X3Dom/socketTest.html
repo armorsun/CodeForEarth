@@ -8,7 +8,9 @@
 <body>
   <h1>socket</h1>
   <script>
-  var socket = io.connect('http://ec2-54-204-81-60.compute-1.amazonaws.com:3579/'); // 連線至伺服器
+  // var socket = io.connect('http://ec2-54-204-81-60.compute-1.amazonaws.com:3579/'); // 連線至伺服器
+  var socket = io.connect('localhost:3579'); // 連線至伺服器
+  console.log("Connected to EC2? ", socket.connected);
   console.log(socket);
 
   socket.on('socketToWeb', function (data) {
