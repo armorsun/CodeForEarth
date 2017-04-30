@@ -117,11 +117,29 @@
           console.log('pos_Z: ',vue1.pos_Z);
 
         // (0,1,0,deg)
-      // }else if(ori_X == 0 && ori_Y ==1){
-      //     deltaX = (vue1.pos_Z) * Math.sin(ori_deg)
-      //     vue1.pos_X += deltaX
-      //     deltaZ = (vue1.pos_Z) * Math.cos(ori_deg)
-      //     vue1.pos_Z = deltaZ
+      }else if(data[3] == 0 && data[4] ==1){
+          console.log("平行方向");
+
+          pos_X = data[0]
+          pos_Y = data[1]
+          pos_Z = data[2]
+          ori_X = data[3]
+          ori_Y = data[4]
+          ori_Z = data[5]
+          ori_deg = data[6] * 0.5
+
+          vue1.ori_X = ori_X
+          vue1.ori_Y = ori_Y
+          vue1.ori_Z = ori_Z
+          vue1.ori4 -= ori_deg
+
+          old_pos_X = vue1.pos_X
+          old_pos_Z = vue1.pos_Z
+          vue1.pos_X = (old_pos_X* Math.cos(ori_deg) - old_pos_Z * Math.sin(ori_deg))
+          vue1.pos_Z = (old_pos_X * Math.sin(ori_deg) + old_pos_Z * Math.cos(ori_deg))
+          console.log('pos_X: ',vue1.pos_X);
+          console.log('pos_Z: ',vue1.pos_Z);
+
         }else {
           console.log("Orientation僅支援(1,0,0,角度)或(0,1,0,角度)");
         }
