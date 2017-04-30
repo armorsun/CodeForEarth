@@ -107,7 +107,7 @@
         if (ori_X == 1 && ori_Y == 0){
           console.log("垂直方向");
           vue1.pos_Y = vue1.pos_Y * Math.cos(ori_deg) + vue1.pos_Z * Math.sin(ori_deg)
-          console.log('aa: ',);
+          console.log('aa: ',-vue1.pos_Y);
           console.log('a: ',-vue1.pos_Y * Math.sin(ori_deg));
           console.log('b: ',vue1.pos_Z * Math.cos(ori_deg));
           vue1.pos_Z = -vue1.pos_Y * Math.sin(ori_deg) + vue1.pos_Z * Math.cos(ori_deg)
